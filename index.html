@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Profession or Paycheck</title>
+<meta name="description" content="See the annual number. Name the job. A 10-round quiz where trades square off against desk jobs.">
+<style>
+  :root{
+    --bg:#0b0e14; --bg2:#11151f; --card:#161c29; --card2:#1b2333;
+    --line:#2a3347; --ink:#eef2f9; --dim:#8b96ac; --faint:#5b667e;
+    --accent:#ff6b1a; --accent2:#ffb38a;
+    --good:#3ddc84; --bad:#ff5566;
+    --radius:14px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:radial-gradient(1200px 600px at 50% -200px, #16203a 0%, var(--bg) 60%);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; min-height:100dvh;
+    display:flex; flex-direction:column; align-items:center;
+    padding:max(12px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+    touch-action:manipulation;
+  }
+  .wrap{width:100%; max-width:520px; display:flex; flex-direction:column; flex:1}
+
+  /* ---------- header ---------- */
+  header{padding:18px 2px 8px; text-align:left}
+  .mark{display:flex; align-items:center; gap:10px}
+  .mark .bolt{
+    width:34px;height:34px;border-radius:9px;background:var(--accent);flex:none;
+    position:relative;
+  }
+  .mark .bolt::before{
+    content:"";position:absolute;left:13px;top:4px;width:8px;height:26px;background:#0b0e14;
+    clip-path:polygon(60% 0,20% 55%,47% 55%,40% 100%,80% 42%,52% 42%);
+  }
+  h1{font-size:19px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;line-height:1.15}
+  h1 span{color:var(--accent)}
+  header p.sub{color:var(--dim);font-size:13px;margin-top:6px;letter-spacing:.02em}
+
+  /* ---------- scorebar ---------- */
+  #scorebar{
+    display:none;align-items:center;justify-content:space-between;
+    background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+    padding:10px 14px;margin-top:8px;
+  }
+  #scorebar.on{display:flex}
+  .score-lbl{font-size:11px;letter-spacing:.18em;color:var(--faint);text-transform:uppercase}
+  .score-val{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+  #streak{font-size:11px;color:var(--accent2);letter-spacing:.12em;text-transform:uppercase;font-weight:700;min-height:14px}
+  #pips{display:flex;gap:5px}
+  .pip{width:7px;height:7px;border-radius:50%;background:#252d41}
+  .pip.done-ok{background:var(--good)}
+  .pip.done-bad{background:var(--bad)}
+  .pip.now{background:var(--accent)}
+
+  /* ---------- screens ---------- */
+  main{flex:1;display:flex;flex-direction:column;padding-bottom:10px}
+  .screen{display:none;animation:dealIn .35s ease both}
+  .screen.on{display:block}
+
+  /* intro */
+  .intro-card{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--radius);padding:28px 22px;margin-top:18px}
+  .kicker{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(255,107,26,.4);border-radius:999px;padding:6px 12px}
+  .intro-card h2{font-size:30px;line-height:1.12;font-weight:800;letter-spacing:-.01em;margin:16px 0 10px}
+  .intro-card h2 em{font-style:normal;color:var(--accent)}
+  .intro-card p{color:var(--dim);font-size:15px;line-height:1.55}
+  .stat-row{display:flex;gap:10px;margin:18px 0 6px}
+  .stat{flex:1;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .stat b{display:block;font-size:17px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .stat span{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:.08em}
+
+  button.cta{
+    width:100%;margin-top:20px;background:var(--accent);color:#14100b;border:none;border-radius:12px;
+    padding:17px;font-size:16px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+    transition:transform .12s ease, filter .12s ease;
+  }
+  button.cta:active{transform:scale(.97)}
+  button.cta:hover{filter:brightness(1.08)}
+  .cta-sub{text-align:center;color:var(--faint);font-size:12px;margin-top:10px;letter-spacing:.04em}
+
+  /* question card */
+  .q-meta{margin-top:16px;display:flex;justify-content:space-between;color:var(--faint);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+  .q-card{background:linear-gradient(165deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--radius);margin-top:10px;padding:24px 20px;text-align:center}
+  .q-prompt{color:var(--dim);font-size:12px;letter-spacing:.22em;text-transform:uppercase}
+  .money{
+    font-size:clamp(44px,12vw,58px);font-weight:800;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;line-height:1.05;margin-top:10px;
+    color:var(--ink);text-shadow:0 0 34px rgba(255,107,26,.18);
+  }
+  .money small{display:block;font-size:12px;font-weight:700;letter-spacing:.24em;color:var(--accent);margin-top:8px;text-transform:uppercase}
+  .who{margin-top:16px;font-size:15px;color:var(--ink);font-weight:600}
+  .who span{color:var(--faint);font-weight:400}
+
+  .options{display:grid;gap:10px;margin-top:16px}
+  .opt{
+    display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+    background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+    padding:15px 16px;color:var(--ink);font-size:16px;font-weight:600;cursor:pointer;
+    transition:border-color .15s, background .15s, transform .1s, opacity .3s;
+    min-height:54px;
+  }
+  .opt .key{
+    flex:none;width:26px;height:26px;border-radius:7px;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800;color:var(--dim);
+  }
+  .opt:not(:disabled):hover{border-color:var(--accent);background:#181f30}
+  .opt:not(:disabled):active{transform:scale(.98)}
+  .opt.correct{border-color:var(--good);background:rgba(61,220,132,.10);animation:pulseOk .7s ease}
+  .opt.correct .key{border-color:var(--good);color:var(--good)}
+  .opt.wrong{border-color:var(--bad);background:rgba(255,85,102,.10);animation:shake .35s ease}
+  .opt.wrong .key{border-color:var(--bad);color:var(--bad)}
+  .opt.mute{opacity:.38}
+
+  /* reveal panel */
+  #reveal{
+    max-height:0;overflow:hidden;transition:max-height .45s ease, opacity .45s ease;opacity:0;
+  }
+  #reveal.on{opacity:1;max-height:340px}
+  .reveal-inner{
+    margin-top:14px;background:rgba(255,107,26,.06);border:1px solid rgba(255,107,26,.35);
+    border-radius:12px;padding:16px;text-align:left;
+  }
+  .verdict{font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+  .verdict.ok{color:var(--good)} .verdict.no{color:var(--bad)}
+  .truth{margin-top:8px;font-size:16px;font-weight:700;line-height:1.35}
+  .fact{margin-top:8px;color:var(--dim);font-size:13.5px;line-height:1.55}
+  button.next{
+    width:100%;margin-top:12px;background:var(--card2);color:var(--ink);border:1px solid var(--accent);
+    border-radius:12px;padding:15px;font-size:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+    animation:dealIn .3s ease both;
+  }
+  button.next:hover{background:rgba(255,107,26,.12)}
+
+  /* end screen */
+  .end-card{background:linear-gradient(165deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:var(--radius);margin-top:18px;padding:30px 22px;text-align:center}
+  .grade-ring{
+    width:110px;height:110px;margin:4px auto 14px;border-radius:50%;
+    border:4px solid var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;
+    box-shadow:0 0 44px rgba(255,107,26,.25) inset;
+  }
+  .grade-ring b{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .grade-ring span{font-size:10px;letter-spacing:.24em;color:var(--dim);margin-top:4px}
+  .end-title{font-size:24px;font-weight:800;letter-spacing:-.01em}
+  .end-line{color:var(--dim);font-size:14.5px;line-height:1.6;margin-top:10px}
+
+  footer{margin-top:auto;padding-top:26px}
+  .sources{border-top:1px solid var(--line);padding-top:14px;color:var(--faint);font-size:11px;line-height:1.65;letter-spacing:.01em}
+  .sources b{color:var(--dim);letter-spacing:.14em;text-transform:uppercase;font-size:10px;display:block;margin-bottom:4px}
+
+  @keyframes dealIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes pulseOk{0%{box-shadow:0 0 0 0 rgba(61,220,132,.45)}70%{box-shadow:0 0 0 14px rgba(61,220,132,0)}100%{box-shadow:none}}
+  @keyframes shake{0%,100%{transform:none}25%{transform:translateX(-6px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="mark"><div class="bolt" aria-hidden="true"></div><h1>Profession <span>or</span> Paycheck</h1></div>
+    <p class="sub">One number hits the table. You name the job.</p>
+    <div id="scorebar">
+      <div><div class="score-lbl">Score</div><div class="score-val"><span id="score">0</span>/10</div></div>
+      <div style="text-align:center"><div class="score-lbl">Round</div><div class="score-val" id="roundnum">1</div></div>
+      <div style="text-align:right"><div class="score-lbl">Streak</div><div id="streak">&nbsp;</div></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- INTRO -->
+    <section class="screen on" id="scr-intro">
+      <div class="intro-card">
+        <span class="kicker">10 rounds · 48 jobs</span>
+        <h2>The union scale beats the corner office — <em>do you know which numbers are real?</em></h2>
+        <p>We pull one salary into the spotlight. Four professions are on the line. Pick the one that actually pays it. Half the fun is that most people guess like it's still 1995.</p>
+        <div class="stat-row">
+          <div class="stat"><b>$144,580</b><span>Air traffic median</span></div>
+          <div class="stat"><b>$95,316</b><span>DSNY top step</span></div>
+          <div class="stat"><b>$58,100</b><span>Median realtor</span></div>
+        </div>
+        <button class="cta" id="btn-start">Deal me in</button>
+        <p class="cta-sub">New shuffle every game · no sign-in · no ads</p>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section class="screen" id="scr-game">
+      <div class="q-meta"><span id="bucket-lbl">Trades vs desks</span><span id="counter">Round 1 of 10</span></div>
+      <div class="q-card">
+        <div class="q-prompt">Whose paycheck is this?</div>
+        <div class="money" id="money">$0<small>per year · total comp</small></div>
+        <div class="who" id="who">Pick the profession that pays <span>this figure</span></div>
+      </div>
+      <div class="options" id="options"></div>
+      <div id="reveal"><div class="reveal-inner">
+        <div class="verdict" id="verdict"></div>
+        <div class="truth" id="truth"></div>
+        <div class="fact" id="fact"></div>
+      </div></div>
+      <button class="next" id="btn-next" style="display:none">Next round</button>
+    </section>
+
+    <!-- END -->
+    <section class="screen" id="scr-end">
+      <div class="end-card">
+        <div class="grade-ring"><b id="final-score">0</b><span>out of 10</span></div>
+        <div class="end-title" id="end-title"></div>
+        <p class="end-line" id="end-line"></p>
+        <button class="cta" id="btn-again">Shuffle a new deck</button>
+      </div>
+    </section>
+
+    <footer>
+      <div class="sources">
+        <b>Sources &amp; fine print</b>
+        Figures reference U.S. Bureau of Labor Statistics OEWS national medians (May 2023–2024 releases), FAA ATC pay data (median $144,580), NAR Member Profile 2025 (realtor median gross income $58,100), NYC DSNY published salary schedule ($95,316 top step after 5.5 yrs), and approximate major-city IBEW journeyman scale including benefits package (~$121K). Medians ≠ everyone's check: region, overtime, tips, bonuses and commissions move these numbers a lot.
+      </div>
+    </footer>
+  </main>
+</div>
+
+<script>
+"use strict";
+/* ============ QUESTION BANK ============ */
+const BANK = [
+  {n:"Air traffic controller", f:144580, tag:"Public safety", fact:"Every shift happens under someone's microscope — but the FAA check clears $144K at the median, with mandatory retirement at 56 and a pension waiting."},
+  {n:"IBEW journeyman electrician (major city)", f:121000, tag:"Trades", fact:"Big-city union wireman scale plus health-and-pension package. Add storm work or overtime calls and the W-2 climbs well past this."},
+  {n:"NYC sanitation worker (top step)", f:95316, tag:"Public sector", fact:"Five-and-a-half years to top pay as one of 'New York's Strongest.' Overtime routinely pushes veteran haulers past $120K."},
+  {n:"Realtor", f:58100, tag:"Sales", fact:"NAR's own numbers say half of members clear this and half don't. The Instagram lambo fleet is statistically… limited."},
+  {n:"Surgeon", f:289000, tag:"Medicine", fact:"A decade-plus of training buys the biggest paycheck in the bank. The median surgeon out-earns about every card on this board."},
+  {n:"Family medicine physician", f:224000, tag:"Medicine", fact:"The most-needed doctor in America earns less than half of what some specialists take home."},
+  {n:"Airline pilot", f:219140, tag:"Aviation", fact:"That's the BLS median for airline pilots and copilots — senior captains at majors can double it in a good year."},
+  {n:"Lawyer", f:145760, tag:"Law", fact:"Half the bar makes more than this, half makes less. Prestige is not the same thing as a payslip."},
+  {n:"Marketing manager", f:157620, tag:"Business", fact:"Plot twist: the people running your feed's ads have a higher median than courtroom attorneys do."},
+  {n:"HR manager", f:136350, tag:"Business", fact:"The person who screens your resume has a six-figure median — negotiations clearly work in-house too."},
+  {n:"Software developer", f:132270, tag:"Tech", fact:"Still one of the strongest medians in the book — and one of the few jobs on here you can start from a $99 course."},
+  {n:"Physician assistant", f:126010, tag:"Medicine", fact:"Six figures without med school debt timing of an MD — one reason PA programs now reject most applicants."},
+  {n:"Cybersecurity analyst", f:120360, tag:"Tech", fact:"Companies get breached by people who find the flaws first. Paying analysts beats paying ransom."},
+  {n:"Veterinarian", f:119100, tag:"Medicine", fact:"Eight years of school for less than many code-bootcamp grads make — pet love does not compound interest."},
+  {n:"School principal", f:101320, tag:"Education", fact:"Running the building finally crosses the hundred-thousand line — a decade or two after teachers started."},
+  {n:"Data scientist", f:108020, tag:"Tech", fact:"'Sexiest job of the 21st century' came with a real median to back the hype."},
+  {n:"Financial advisor", f:99580, tag:"Finance", fact:"Advising other people's money is steady money — assets under management means raises that ride the market."},
+  {n:"Subway operator", f:74470, fact:"National median for driving trains. In OT-heavy systems like New York, plenty of operators blow past six figures.", tag:"Transit"},
+  {n:"Elevator installer/repairer", f:102420, tag:"Trades", fact:"The best-paid trade in America's books: apprenticeship paths pay while you learn, no bachelor's required."},
+  {n:"Power line installer", f:88000, tag:"Trades", fact:"Storm duty is brutal and paid accordingly — lineworkers can double their hours' worth when the grid goes down."},
+  {n:"Registered nurse", f:86070, tag:"Medicine", fact:"Three shifts a week and travel contracts doubled some RN paychecks post-2020. Hospital staff medians are still catching up."},
+  {n:"Aircraft mechanic", f:75400, tag:"Trades", fact:"The A&P license is a two-year ticket to keeping 300 people airborne at a time."},
+  {n:"Crane operator", f:64000, tag:"Trades", fact:"Median looks modest — but tower crane hands on big-city high-rises bill toward $150/hour and up."},
+  {n:"Plumber (median)", f:61550, tag:"Trades", fact:"The median plumber barely edges the retail floor — but a licensed service-truck owner with a van and a Saturday rate tells a very different story."},
+  {n:"Police patrol officer", f:72000, tag:"Public safety", fact:"National patrol median sits mid-deck; big-city details and overtime are where the check gets heavy."},
+  {n:"Postal mail carrier", f:57500, tag:"Public sector", fact:"Rain, sleet, gloom of night — and a federal pension. Step increases arrive on schedule, unlike most salaries."},
+  {n:"Firefighter", f:52000, tag:"Public safety", fact:"Base medians undersell it: big-department veterans stacking overtime regularly clear six figures."},
+  {n:"HVAC technician", f:57300, tag:"Trades", fact:"Heat wave or cold snap, demand answers to physics — comfort techs name their overtime during every extreme-wallet season."},
+  {n:"Welder", f:49000, tag:"Trades", fact:"Shop-floor welding pays modestly; underwater saturation welders trade lungs for hazard pay measured in hundreds per hour."},
+  {n:"Long-haul truck driver", f:54320, tag:"Logistics", fact:"Everything you own rode in a truck. Owner-operators gamble bigger: good years print, bad years eat diesel."},
+  {n:"Fast-food cook", f:29000, tag:"Service", fact:"The floor of our deck — and roughly what a single ER visit costs the person cooking your fries."},
+  {n:"Retail salesperson", f:34180, tag:"Sales", fact:"Millions of Americans run entire lives on approximately this number."},
+  {n:"Bartender (pre-tips)", f:33740, tag:"Service", fact:"Official stats don't count tips — in busy rooms the real check can triple. Cash remains undefeated."},
+  {n:"Preschool teacher", f:37120, tag:"Education", fact:"Shaping humans at their most formative years for close to entry-level money. Society's math, not ours."},
+  {n:"Hairdresser", f:34970, tag:"Service", fact:"Book-of-business stylists out-earn this handily; booth-rent economics mean you're often looking at their rent, not income."},
+  {n:"Paramedic", f:53000, tag:"Public safety", fact:"Saving lives at 3 a.m. for a check smaller than many office middle managers'. Ask any EMT about it — loudly."},
+  {n:"Photographer", f:45070, tag:"Creative", fact:"Everyone with a phone became one; the pros who kept working got there on weddings, brands and stubbornness."},
+  {n:"Web developer", f:85000, tag:"Tech", fact:"Between agencies, freelance and product teams, the range is enormous — this median splits it fairly evenly."},
+  {n:"IT support specialist", f:59240, tag:"Tech", fact:"Gateway role: help desks become sysadmins become six-figure engineers, usually without a relevant degree in sight."},
+  {n:"Paralegal", f:61000, tag:"Law", fact:"Most of the paperwork an attorney signs was built at this desk — sans law school tuition."},
+  {n:"Insurance sales agent", f:59080, tag:"Sales", fact:"Renewals are the cheat code: sell it once, collect while you sleep."},
+  {n:"Head chef", f:57000, tag:"Hospitality", fact:"Ran every plate on a Saturday rush — for around what a junior spreadsheet jockey takes home."},
+  {n:"Librarian", f:64000, tag:"Education", fact:"Usually requires a master's degree, famously quiet, quietly stable pension-and-summers gigs exist."},
+  {n:"College professor", f:84000, tag:"Education", fact:"Median across all ranks and fields. Adjunct reality drags far below this; star chairs float far above."},
+  {n:"Investment banker (year 1)", f:170000, tag:"Finance", fact:"First-year analyst street comp: six-figure base plus bonus — purchased at roughly 90-hour weeks."},
+  {n:"U.S. Congress member", f:174000, tag:"Government", fact:"Set by law since 2009: $174,000 flat, from freshman rep to Speaker (Speaker gets more). Votes not included."},
+  {n:"Dental hygienist", f:87200, tag:"Healthcare", fact:"Two-year (or four-year) credential, flexible scheduling, and some of the happiest-work-life rankings in healthcare."},
+  {n:"Physical therapist", f:100000, tag:"Healthcare", fact:"Doctorate-level education in most cases, hovering right at six figures — and hiring demand that never seems to cool."}
+];
+
+/* ============ STATE ============ */
+const ROUNDS = 10;
+let deck = [], idx = 0, score = 0, streak = 0, results = [], locked = false;
+
+const $ = id => document.getElementById(id);
+
+function fmt(n){ return "$" + n.toLocaleString("en-US"); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* pick 3 distractors near-ish but spread apart */
+function distractors(answer){
+  const ranked = BANK
+    .filter(b => b !== answer)
+    .map(b => ({b, d: Math.abs(Math.log(b.f) - Math.log(answer.f))}))
+    .sort((x,y) => x.d - y.d)
+    .slice(0, 24)
+    .map(x => x.b);
+  const picks = [];
+  const pool = shuffle(ranked.slice());
+  for(const cand of pool){
+    if(picks.length === 3) break;
+    const okSpread = picks.every(p => {
+      const ratio = Math.max(p.f, cand.f) / Math.min(p.f, cand.f);
+      return ratio > 1.18 || ratio < 1/1.18;
+    });
+    if(okSpread) picks.push(cand);
+  }
+  while(picks.length < 3){ // fallback fill
+    const c = pool[Math.floor(Math.random()*pool.length)];
+    if(!picks.includes(c)) picks.push(c);
+  }
+  return picks;
+}
+
+function startGame(){
+  deck = shuffle(BANK.slice()).slice(0, ROUNDS);
+  idx = 0; score = 0; streak = 0; results = [];
+  $("score").textContent = "0";
+  $("streak").innerHTML = "&nbsp;";
+  renderPips();
+  showScreen("game");
+  renderQuestion();
+}
+
+function renderPips(){
+  const holder = $("scorebar");
+  let pipsEl = document.getElementById("pips");
+  if(!pipsEl){ pipsEl = document.createElement("div"); pipsEl.id = "pips"; holder.appendChild(pipsEl); }
+  pipsEl.innerHTML = "";
+  for(let i=0;i<ROUNDS;i++){
+    const p = document.createElement("div");
+    p.className = "pip";
+    if(results[i] === true) p.classList.add("done-ok");
+    else if(results[i] === false) p.classList.add("done-bad");
+    else if(i === idx && i < deck.length) p.classList.add("now");
+    pipsEl.appendChild(p);
+  }
+}
+
+function showScreen(name){
+  ["intro","game","end"].forEach(s => $("scr-"+s).classList.toggle("on", s === name));
+  $("scorebar").classList.toggle("on", name !== "intro");
+}
+
+function renderQuestion(){
+  const q = deck[idx];
+  locked = false;
+  $("roundnum").textContent = String(idx + 1);
+  $("counter").textContent = "Round " + (idx+1) + " of " + ROUNDS;
+  $("bucket-lbl").textContent = q.tag ? q.tag + " tier" : "Mixed tier";
+  $("who").innerHTML = 'Pick the profession whose total comp matches <span>this figure</span>';
+  const money = $("money");
+  money.innerHTML = "";
+  const amt = document.createTextNode(fmt(q.f));
+  money.appendChild(amt);
+  const small = document.createElement("small");
+  small.textContent = "Per year · before tips";
+  money.appendChild(small);
+
+  const opts = shuffle([{...q, correct:true}, ...distractors(q).map(d => ({...d, correct:false}))]);
+  const box = $("options");
+  box.innerHTML = "";
+  opts.forEach((o, i) => {
+    const btn = document.createElement("button");
+    btn.className = "opt";
+    btn.innerHTML = '<span class="key">' + "ABCD"[i] + '</span><span>' + o.n + '</span>';
+    btn.addEventListener("click", () => answer(btn, o));
+    box.appendChild(btn);
+  });
+
+  const rev = $("reveal"); rev.classList.remove("on");
+  $("btn-next").style.display = "none";
+  renderPips();
+  restartAnim();
+}
+
+function restartAnim(){
+  const scr = $("scr-game");
+  scr.style.animation = "none"; void scr.offsetWidth; scr.style.animation = "";
+}
+
+function answer(btn, choice){
+  if(locked) return;
+  locked = true;
+  const q = deck[idx];
+  const buttons = Array.from(document.querySelectorAll("#options .opt"));
+  buttons.forEach(b => { if(b !== btn) b.classList.add(choice.correct ? "mute" : "mute"); });
+
+  const correctBtn = buttons.find(b =>
+    b.lastChild.textContent === q.n
+  );
+  if(choice.correct){
+    score++; streak++;
+    btn.classList.add("correct");
+    $("streak").textContent = streak >= 2 ? "×" + streak : "\u00a0";
+  } else {
+    streak = 0;
+    btn.classList.remove("mute");
+    btn.classList.add("wrong");
+    $("streak").innerHTML = "&nbsp;";
+  }
+  buttons.forEach(b => b.disabled = true);
+  if(correctBtn && !choice.correct) correctBtn.classList.add("correct");
+
+  $("score").textContent = String(score);
+  results[idx] = choice.correct;
+
+  const v = $("verdict");
+  v.textContent = choice.correct ? "Correct — payday claimed" : "Wrong wallet";
+  v.className = "verdict " + (choice.correct ? "ok" : "no");
+  $("truth").textContent = q.n + ": " + fmt(q.f) + "/yr";
+  $("fact").textContent = q.fact;
+
+  const rev = $("reveal");
+  requestAnimationFrame(() => rev.classList.add("on"));
+
+  const nb = $("btn-next");
+  nb.textContent = idx === ROUNDS - 1 ? "See final score" : "Next round";
+  nb.style.display = "block";
+  setTimeout(() => nb.scrollIntoView({behavior:"smooth", block:"nearest"}), 250);
+  renderPips();
+}
+
+function nextRound(){
+  if(idx === ROUNDS - 1){ endGame(); return; }
+  idx++;
+  renderQuestion();
+}
+
+function endGame(){
+  showScreen("end");
+  $("final-score").textContent = String(score);
+  let t, l;
+  if(score >= 9){ t = "Master Electrician Grade"; l = "You read paychecks like a codebook. The hall would be proud — go argue someone's contract."; }
+  else if(score >= 7){ t = "Journeyman Certified"; l = "Solid hands, clean estimates. A few wrong connections, but nothing that trips the breaker."; }
+  else if(score >= 4){ t = "Second-Year Apprentice"; l = "You know the tools but not yet the sticker shock. Run another deck — reps make the electrician."; }
+  else { t = "Welcome to the Hall"; l = "Reality called: it says welcome to union scale. Every master started exactly here. Shuffle again."; }
+  $("end-title").textContent = t;
+  $("end-line").textContent = l;
+}
+
+$("btn-start").addEventListener("click", startGame);
+$("btn-again").addEventListener("click", startGame);
+$("btn-next").addEventListener("click", nextRound);
+</script>
+</body>
+</html>
